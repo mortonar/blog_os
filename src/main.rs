@@ -6,12 +6,16 @@
 
 use blog_os::println;
 use core::panic::PanicInfo;
+use x86_64::registers::control::Cr3;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
     println!("Hello World{}", "!");
 
     blog_os::init();
+
+    let (level_4_page_table, _flags) = Cr3::read();
+    println!("Level 4 page table at: {:?}", level_4_page_table.start_address());
 
     #[cfg(test)]
     test_main();
