@@ -7,6 +7,8 @@ extern crate alloc;
 
 use alloc::{boxed::Box, rc::Rc, vec, vec::Vec};
 use blog_os::memory::BootInfoFrameAllocator;
+use blog_os::task::executor::Executor;
+use blog_os::task::{Task, keyboard};
 use blog_os::{allocator, memory, println};
 use bootloader::{BootInfo, entry_point};
 use core::panic::PanicInfo;
@@ -57,11 +59,25 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
         Rc::strong_count(&cloned_reference)
     );
 
-    #[cfg(test)]
-    test_main();
+    let mut executor = Executor::new();
+    executor.spawn(Task::new(example_task()));
+    executor.spawn(Task::new(keyboard::print_keypresses()));
+    executor.run();
 
-    println!("It did not crash!");
-    blog_os::hlt_loop();
+    // #[cfg(test)]
+    // test_main();
+    //
+    // println!("It did not crash!");
+    // blog_os::hlt_loop();
+}
+
+async fn async_number() -> u32 {
+    42
+}
+
+async fn example_task() {
+    let number = async_number().await;
+    println!("async number: {}", number);
 }
 
 #[cfg(not(test))]
